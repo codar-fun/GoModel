@@ -19,7 +19,7 @@ const defaultBaseURL = "https://api.deepseek.com"
 var Registration = providers.Registration{
 	Type:                        "deepseek",
 	New:                         New,
-	PassthroughSemanticEnricher: passthroughSemanticEnricher{},
+	PassthroughSemanticEnricher: passthroughSemanticEnricher,
 	Discovery: providers.DiscoveryConfig{
 		DefaultBaseURL: defaultBaseURL,
 	},
@@ -135,9 +135,7 @@ func (p *Provider) ChatCompletion(ctx context.Context, req *core.ChatRequest) (*
 	if err != nil {
 		return nil, err
 	}
-	if resp.Model == "" {
-		resp.Model = req.Model
-	}
+	core.EnsureModel(&resp.Model, req.Model)
 	return &resp, nil
 }
 

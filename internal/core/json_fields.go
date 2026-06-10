@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"math"
+	"slices"
 	"sort"
 
 	"github.com/tidwall/gjson"
@@ -18,6 +19,11 @@ type UnknownJSONFields struct {
 }
 
 // CloneRawJSON returns a detached copy of a raw JSON value.
+// IsJSONNull reports whether trimmed JSON data is empty or the null literal.
+func IsJSONNull(trimmed []byte) bool {
+	return len(trimmed) == 0 || bytes.Equal(trimmed, []byte("null"))
+}
+
 func CloneRawJSON(raw json.RawMessage) json.RawMessage {
 	if len(raw) == 0 {
 		return nil
@@ -233,7 +239,7 @@ func extractUnknownJSONFields(data []byte, knownFields ...string) (UnknownJSONFi
 	buf.WriteByte('{')
 	wrote := false
 	root.ForEach(func(key, value gjson.Result) bool {
-		if containsJSONField(knownFields, key.String()) {
+		if slices.Contains(knownFields, key.String()) {
 			return true
 		}
 		if wrote {
@@ -251,15 +257,6 @@ func extractUnknownJSONFields(data []byte, knownFields ...string) (UnknownJSONFi
 
 	buf.WriteByte('}')
 	return UnknownJSONFields{raw: buf.Bytes()}, nil
-}
-
-func containsJSONField(knownFields []string, field string) bool {
-	for _, known := range knownFields {
-		if field == known {
-			return true
-		}
-	}
-	return false
 }
 
 func marshalWithUnknownJSONFields(base any, extraFields UnknownJSONFields) ([]byte, error) {

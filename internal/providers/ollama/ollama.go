@@ -119,9 +119,7 @@ func (p *Provider) ChatCompletion(ctx context.Context, req *core.ChatRequest) (*
 	if err != nil {
 		return nil, err
 	}
-	if resp.Model == "" {
-		resp.Model = req.Model
-	}
+	core.EnsureModel(&resp.Model, req.Model)
 	return &resp, nil
 }
 
@@ -215,27 +213,33 @@ func (p *Provider) Embeddings(ctx context.Context, req *core.EmbeddingRequest) (
 	}, nil
 }
 
+// errBatchUnsupported is returned by every batch endpoint because Ollama has
+// no native discounted batch API.
+func errBatchUnsupported() error {
+	return core.NewInvalidRequestError("ollama does not support native discounted batch processing", nil)
+}
+
 // CreateBatch returns unsupported because Ollama has no native discounted batch API.
 func (p *Provider) CreateBatch(_ context.Context, _ *core.BatchRequest) (*core.BatchResponse, error) {
-	return nil, core.NewInvalidRequestError("ollama does not support native discounted batch processing", nil)
+	return nil, errBatchUnsupported()
 }
 
 // GetBatch returns unsupported because Ollama has no native discounted batch API.
 func (p *Provider) GetBatch(_ context.Context, _ string) (*core.BatchResponse, error) {
-	return nil, core.NewInvalidRequestError("ollama does not support native discounted batch processing", nil)
+	return nil, errBatchUnsupported()
 }
 
 // ListBatches returns unsupported because Ollama has no native discounted batch API.
 func (p *Provider) ListBatches(_ context.Context, _ int, _ string) (*core.BatchListResponse, error) {
-	return nil, core.NewInvalidRequestError("ollama does not support native discounted batch processing", nil)
+	return nil, errBatchUnsupported()
 }
 
 // CancelBatch returns unsupported because Ollama has no native discounted batch API.
 func (p *Provider) CancelBatch(_ context.Context, _ string) (*core.BatchResponse, error) {
-	return nil, core.NewInvalidRequestError("ollama does not support native discounted batch processing", nil)
+	return nil, errBatchUnsupported()
 }
 
 // GetBatchResults returns unsupported because Ollama has no native discounted batch API.
 func (p *Provider) GetBatchResults(_ context.Context, _ string) (*core.BatchResultsResponse, error) {
-	return nil, core.NewInvalidRequestError("ollama does not support native discounted batch processing", nil)
+	return nil, errBatchUnsupported()
 }

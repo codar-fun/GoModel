@@ -105,9 +105,7 @@ func (p *CompatibleProvider) ChatCompletion(ctx context.Context, req *core.ChatR
 	if err != nil {
 		return nil, err
 	}
-	if resp.Model == "" {
-		resp.Model = req.Model
-	}
+	core.EnsureModel(&resp.Model, req.Model)
 	return &resp, nil
 }
 
@@ -167,9 +165,7 @@ func (p *CompatibleProvider) Responses(ctx context.Context, req *core.ResponsesR
 	if err != nil {
 		return nil, err
 	}
-	if resp.Model == "" {
-		resp.Model = req.Model
-	}
+	core.EnsureModel(&resp.Model, req.Model)
 	return &resp, nil
 }
 
@@ -340,9 +336,7 @@ func (p *CompatibleProvider) Embeddings(ctx context.Context, req *core.Embedding
 	if err != nil {
 		return nil, err
 	}
-	if resp.Model == "" {
-		resp.Model = req.Model
-	}
+	core.EnsureModel(&resp.Model, req.Model)
 	return &resp, nil
 }
 
@@ -399,17 +393,7 @@ func (p *CompatibleProvider) GetBatch(ctx context.Context, id string) (*core.Bat
 }
 
 func (p *CompatibleProvider) ListBatches(ctx context.Context, limit int, after string) (*core.BatchListResponse, error) {
-	values := url.Values{}
-	if limit > 0 {
-		values.Set("limit", strconv.Itoa(limit))
-	}
-	if after != "" {
-		values.Set("after", after)
-	}
-	endpoint := "/batches"
-	if encoded := values.Encode(); encoded != "" {
-		endpoint += "?" + encoded
-	}
+	endpoint := providers.PaginatedEndpoint("/batches", limit, "after", after)
 
 	var resp core.BatchListResponse
 	err := p.Do(ctx, llmclient.Request{
